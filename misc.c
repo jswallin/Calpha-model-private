@@ -20,6 +20,10 @@ FILE *fp_log;
 void read_cont_param(char fn[],int ip1[],int ip2[],int npair,double kcont[]);
 void read_bonded_param(char fn[],double v1[],double k1[],double v2[],double k2[],
 		       double v3[],double k3[], double k4[]);
+void read_disordered_regions(char fn[],int dis[]);
+void set_disordered_param(int dis[],double bn[],double thn[],double phn[],
+			  double ktor1[],double ktor3[]);
+
 /****************************************************************************/
 /***** INPUT/OUTPUT *********************************************************/
 /****************************************************************************/
@@ -580,43 +584,50 @@ void write_natdist(char *fn,double *dist,int n,int *ip1,int *ip2) {
   return;
 }
 /****************************************************************************/
-void set_bonded_strength(double *kbond,double *kbend,double *ktor1,double *ktor3,
-			 int *nat) {
-  int i,j,k,l;
+void set_bonded_strength(double *kbond,double *kbend,double *ktor1,double *ktor3) {
+  int i,j;
 
-  for (i = 0; i < N-1; i++) {
-    j = i + 1;
-    kbond[i] = kbon;
-  }
+  for (i = 0; i < NCH; i++) {
+
+    for (j = iBeg[i]; j <= iEnd[i]-1; j++) 
+      kbond[j] = kbon;
   
-  for (i = 0; i < N-2; i++) {
-    j = i + 1;
-    k = i + 2;
-    kbend[j] = kth;
-  }
+    for (j = iBeg[i]+1; j <= iEnd[i]-1; j++) 
+      kbend[j] = kth;
   
-  for (i = 0; i < N-3; i++) {
-    j = i + 1;
-    k = i + 2;
-    l = i + 3;
-    if (nat[i] && nat[j] && nat[k] && nat[l]) {
+    for (j = iBeg[i]+1; j <= iEnd[i]-2; j++) {
       ktor1[j] = kph1;
       ktor3[j] = kph3;
-    } else {
-      ktor1[j] = 0;
-      ktor3[j] = 0;
     }
+
   }
     
   return;
 }
 /****************************************************************************/
-void get_bonded_param(double *bn,double *thn,double *phn,
-		      double *xnat,double *ynat,double *znat,
-		      int *nat, int *tor,char *fn) {
-  int i,j,k,l;
+void print_bonded_param(double *bn,double *thn,double *phn,char *fn) {
+  int i,j;
   char str[100];
   FILE *fp1;
+
+  strcpy(str,TESTDIR);
+  strcat(str,"bonded_param");
+  strcat(str,fn);
+
+  fp1 = fopen(str,"w");
+  for (i = 0; i < NCH; i++) {
+    for (j = iBeg[i]; j <= iEnd[i]; j++) 
+      fprintf(fp1,"%3i %3i %10.5f %10.5f %10.5f\n",i,j,
+	      bn[j],thn[j]*180./pi,phn[j]*180./pi);
+  }
+  fclose(fp1);
+  
+  return ;
+}
+/****************************************************************************/
+void get_bonded_param(double *bn,double *thn,double *phn,
+		      double *xnat,double *ynat,double *znat) {
+  int i,j;
 
   for (i = 0; i < N; i++) {
     x[i] = xnat[i];
@@ -626,40 +637,18 @@ void get_bonded_param(double *bn,double *thn,double *phn,
 
   if (1 != cart2dof()) printf("<get_bonded_param> Error native configuration\n");
 
-  for (i = 0; i < N-1; i++) {
-    j = i + 1;
-    if (nat[i] && nat[j])
-      bn[i] =  b[i];
-  }
-  
-  for (i = 0; i < N-2; i++) {
-    j = i + 1;
-    k = i + 2;
-    if (nat[i] && nat[j] && nat[k])
-      thn[j] = th[j];
-  }
-  
-  for (i = 0; i < N-3; i++) {
-    j = i + 1;
-    k = i + 2;
-    l = i + 3;
-    if (nat[i] && nat[j] && nat[k] && nat[l]) {
-      phn[j] = ph[j];
-      tor[j] = 1;
-    }
-  }
-  
-  strcpy(str,TESTDIR);
-  strcat(str,"bonded_param");
-  strcat(str,fn);
+  for (i = 0; i < NCH; i++) { 
 
-  fp1 = fopen(str,"w");
-  for (i = 0; i < NCH; i++) {
-    for (j = iBeg[i]; j <= iEnd[i]; j++) 
-      fprintf(fp1,"%3i %3i %10.5f %10.5f %10.5f %3i\n",i,j,
-	      bn[j],thn[j]*180./pi,phn[j]*180./pi,nat[j]);
+    for (j = iBeg[i]; j <= iEnd[i]-1; j++) 
+      bn[j] = b[j];
+  
+    for (j = iBeg[i]+1; j <= iEnd[i]-1; j++)
+      thn[j] = th[j];
+  
+    for (j = iBeg[i]+1; j <= iEnd[i]-2; j++)
+      phn[j] = ph[j];
+
   }
-  fclose(fp1);
   
   return;
 }
@@ -768,25 +757,28 @@ void read_cont_param(char fn[],int ip1[],int ip2[],int npair,double kcont[]) {
   double kread;
   FILE *fp;
   
-  if ( (fp = fopen(fn,"r")) != NULL ) {
+  if ( (fp = fopen(fn,"r")) == NULL )
+    return;
 
-    while (3 == fscanf(fp,"%i %i %lf\n",&i,&j,&kread)) {
+  while (3 == fscanf(fp,"%i %i %lf\n",&i,&j,&kread)) {
     
-      for (m = 0; m < npair; ++m) {
-	if ( (i == ip1[m] && j == ip2[m]) ||
-	     (i == ip2[m] && j == ip1[m]) ) break;
-      }
-      
-      if (m == npair) {
-	printf("<read_contpar> (%s) unknown contact %i %i %i\n",fn, m,i,j);
-	continue;
-      }
-      
-      kcont[m] = kread;
-      printf("<read_contpar> (%s) setting strength of contact %i %i %i to %lf\n",
-	     fn,m,i,j,kcont[m]);
+    for (m = 0; m < npair; ++m) {
+      if ( (i == ip1[m] && j == ip2[m]) ||
+	   (i == ip2[m] && j == ip1[m]) ) break;
     }
+    
+    if (m == npair) {
+      printf("<read_contpar> (%s) unknown contact %i %i %i\n",fn, m,i,j);
+      continue;
+    }
+    
+    kcont[m] = kread;
+
+    printf("<read_contpar> (%s) setting strength of contact %i %i %i to %lf\n",
+	   fn,m,i,j,kcont[m]);
   }
+
+  fclose(fp);
   
   return ;
 }
@@ -815,6 +807,64 @@ void read_bonded_param(char fn[],
 	printf("<read_param> (%s) read error\n",fn);
     }
   } 
+
+  return ;
+}
+/****************************************************************************/
+void read_disordered_regions(char fn[],int dis[]) {
+  int i,j;
+  char str[100];
+  FILE *fp;
+  
+  strcpy(str,fn);
+  strcat(str,"_disordered_regions");
+  
+  if ((fp = fopen(str,"r")) == NULL) {
+    printf("<read_disordered_regions> no file %s \n",str);
+    return ;
+  } else {
+    printf("<read_disordered_regions> (%s) \n",str);
+  }
+
+  while (2 == fscanf(fp,"%d %d",&i,&j)) {
+    
+    if (i < 0 || i > N-1) {
+      printf("<read_disordered_regions> (%s) ignoring settings for residue %i \n",fn,i);
+      continue;
+    }
+    
+    dis[i] = j;
+    
+    if (dis[i])
+      printf("<read_disordered_regions> (%s) setting disordered residue %i \n",fn,i);
+  } 
+
+  fclose(fp);
+  
+  return ;
+}
+/****************************************************************************/
+void set_disordered_param(int dis[],double bn[],double thn[],double phn[],
+			  double ktor1[],double ktor3[]) {
+  int i,j;
+
+  for (i = 0; i < NCH; i++) {
+    for (j = iBeg[i]; j <= iEnd[i]; j++) {
+
+      if (dis[j] && dis[j+1] && j <= iEnd[i]-1)
+	bn[j] = 3.8;
+
+      if (dis[j] && j >= iBeg[i]+1 && j <= iEnd[i]-1)
+	thn[j] = 110.0 * pi / 180.;
+      
+      if (dis[j] && dis[j+1] && j >= iBeg[i]+1 && j <= iEnd[i]-2) { 
+	phn[j] = 30.0 * pi / 180.;
+	ktor1[j] = 0;
+	ktor3[j] = kph3;
+      }
+
+    }
+  }
 
   return ;
 }
@@ -979,12 +1029,12 @@ void init(int iflag) {
 
   /* native structures */
 
-  if ( (nnat1 = read_native(NATIVE,xnat,ynat,znat,nat)) > 0) 
+  if ( (nnat1 = read_native(NATIVE,xnat,ynat,znat)) > 0) 
     printf("<init> NATIVE: Read %i residue positions (%s)\n",nnat1,NATIVE);
   else
     printf("<init> NATIVE: No data (%s)\n",NATIVE);
 
-  if ( (nnat2 = read_native(NATIVE2,xnat2,ynat2,znat2,nat2)) > 0) 
+  if ( (nnat2 = read_native(NATIVE2,xnat2,ynat2,znat2)) > 0) 
     printf("<init> NATIVE2: Read %i residue positions (%s)\n",nnat2,NATIVE2);
   else
     printf("<init> NATIVE2: No data (%s)\n",NATIVE2);
@@ -1039,7 +1089,7 @@ void init(int iflag) {
 
   if (FF_DISULF > 0) {
     double dist_dummy[MAXP];
-     printf("<init> DISULFIDE: FF_DISULF %i\n",FF_DISULF);
+    printf("<init> DISULFIDE: FF_DISULF %i\n",FF_DISULF);
     ndpair = read_contacts(DISULFIDE,id1,id2);
     if (ndpair > 0) {
       printf("<init> DISULFIDE: Read %i contacts  (%s)\n",ndpair, DISULFIDE);
@@ -1103,18 +1153,29 @@ void init(int iflag) {
 
   /* reference values from native structure */
   
-  if (nnat1 > 0) get_bonded_param(bn,thn,phn,xnat,ynat,znat,nat,tor,"_nat.out");
-  if (nnat2 > 0) get_bonded_param(bn2,thn2,phn2,xnat2,ynat2,znat2,nat2,tor2,"_nat2.out");
+  if (nnat1 > 0) get_bonded_param(bn,thn,phn,xnat,ynat,znat);
+  if (nnat2 > 0) get_bonded_param(bn2,thn2,phn2,xnat2,ynat2,znat2);
 
   /* default strengths */
   
-  set_bonded_strength(kbond,kbend,ktor1,ktor3,nat);
-  set_bonded_strength(kbond2,kbend2,ktor1_2,ktor3_2,nat2);
+  set_bonded_strength(kbond,kbend,ktor1,ktor3);
+  set_bonded_strength(kbond2,kbend2,ktor1_2,ktor3_2);
 
   /* bonded parameters from file */  
 
   read_bonded_param(BONDEDPAR,bn,kbond,thn,kbend,phn,ktor1,ktor3);
   read_bonded_param(BONDEDPAR2,bn2,kbond2,thn2,kbend2,phn2,ktor1_2,ktor3_2);
+
+  /* disordered regions */
+
+  read_disordered_regions(NATIVE,dis);
+  read_disordered_regions(NATIVE2,dis2);
+
+  set_disordered_param(dis,bn,thn,phn,ktor1,ktor3);
+  set_disordered_param(dis2,bn2,thn2,phn2,ktor1_2,ktor3_2);
+
+  if (nnat1 > 0) print_bonded_param(bn,thn,phn,"_nat.out");
+  if (nnat2 > 0) print_bonded_param(bn2,thn2,phn2,"_nat2.out");
 
   /* initialize functions */
   
@@ -1140,8 +1201,6 @@ void init(int iflag) {
 
   /* initial chain configuration  */  
 
-  int idum[N];
-
   if (ISTART == 0) {  /* native */
     printf("<init> Initializing chain(s) from NATIVE %s\n",NATIVE);
     for (i = 0; i < N; i++) {
@@ -1152,7 +1211,7 @@ void init(int iflag) {
     if (1 != cart2dof()) printf("Error initial configuration");
   } else if (ISTART == 1) {     /* read */
     printf("<init> Initializing chain(s) from START %s\n",START);
-    if (N != read_native(START,x,y,z,idum)) printf("Error initial configuration 1\n");
+    if (N != read_native(START,x,y,z)) printf("Error initial configuration 1\n");
     if (1 != cart2dof()) printf("Error initial configuration 2\n");
   } else if (ISTART == 2) {     /* random */
     printf("<init> Initializing chain(s) from random configuration\n");

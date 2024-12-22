@@ -28,8 +28,7 @@ double xnat4[N],ynat4[N],znat4[N]; /* native structure 4                    */
 double xnat5[N],ynat5[N],znat5[N]; /* native structure 4                    */
 double bn[N],thn[N],phn[N];        /* bond lengths, bond & torsion angles   */
 double bn2[N],thn2[N],phn2[N];     /* bond lengths, bond & torsion angles   */
-int nat[N],nat2[N],nat3[N],nat4[N],nat5[N]; /* 1 if native coordinate read  */
-int tor[N],tor2[N];                /* native coordinate read                */
+int dis[N],dis2[N];                /* disordered regions                    */
 int npair;                         /* # native contacts                     */
 int npair2;                        /* # native contacts                     */
 int npair3;
@@ -354,7 +353,7 @@ double bond(int iflag) {
 	db = b[i] - bn[i];	
 	bond_ecalc(&et,&fb,db,kbond[i]);
 	
-	if (FF_BOND == 2 && kbond2[i] != 0) {
+	if (FF_BOND == 2) {
 	  db2 = b[i] - bn2[i];
 	  bond_ecalc(&e2,&fb2,db2,kbond2[i]);
 	  log_sum_merge(e1=et,e2,&et,fb1=fb,fb2,&fb,bet);
@@ -379,8 +378,9 @@ double bond(int iflag) {
     
       for (k = 0; k < ndpair; ++k) {
 	i = id1[k]; j = id2[k];
+	r = sqrt(vec2(i,j,&dx,&dy,&dz));
 	
-	db = (r = sqrt(vec2(i,j,&dx,&dy,&dz))) - distd1[k];
+	db = r - distd1[k];
 	bond_ecalc(&et,&fb,db,kbon);
 	
 	if (FF_DISULF == 2) {
@@ -472,7 +472,7 @@ double bend(int iflag) {
 	dth = th[j] - thn[j];
 	bend_ecalc(&et,&fben,dth,kbend[j]);
 	
-	if (FF_BEND == 2  && kbend2[j] != 0) {
+	if (FF_BEND == 2) {
 	  dth2 = th[j]-thn2[j];
 	  bend_ecalc(&e2,&fben2,dth2,kbend2[j]);
 	  log_sum_merge(e1=et,e2,&et,fben1=fben,fben2,&fben,bet);
@@ -482,8 +482,6 @@ double bend(int iflag) {
 	
 	cth = max(cos(th[j]),-cthmin);
 	sth = max(sin(th[j]),sthmin);
-	//	cth = cos(th[j]);
-	//	sth = sin(th[j]);
 	if (sin(th[j]) < sthmin) {
 	  fprintf(fp_log,"bend : j %i th %lf thn %lf %lf\n",j,th[j]*180./pi,thn[j]*180/pi,thn2[j]*180/pi);
 	  fflush(fp_log);
@@ -535,7 +533,7 @@ double bend(int iflag) {
 	  e2 = e1 = et;
 	  fben2 = fben1 = fben;
 	  
-	  if (FF_BEND == 2  && kbend2[j] != 0) {
+	  if (FF_BEND == 2) {
 	    dth2 = d - thn2[j];
 	    bend_ecalc(&e2,&fben2,dth2,kbend2[j]);
 	    log_sum_merge(e1=et,e2,&et,fben1=fben,fben2,&fben,bet);
@@ -588,20 +586,12 @@ double torsion(int iflag) {
 	k = i + 2;
 	l = i + 3;
 	dph = ph[j] - phn[j];
-	
-	if (FF_TORS == 1) {
-	  tors_ecalc(&et,&fph,dph,ktor1[j],ktor3[j]);
-	}
+	tors_ecalc(&et,&fph,dph,ktor1[j],ktor3[j]);
 	
 	if (FF_TORS == 2) {
 	  dph2 = ph[j] - phn2[j];
-	  if (tor[j]) tors_ecalc(&e1,&fph1,dph,ktor1[j],ktor3[j]);
-	  if (tor2[j]) tors_ecalc(&e2,&fph2,dph2,ktor1_2[j],ktor3_2[j]);
-	  if (tor[j] && tor2[j]) log_sum_merge(e1,e2,&et,fph1,fph2,&fph,bet);
-	  else {
-	    et = (tor[j] ? e1 : e2);
-	    fph = (tor[j] ? fph1 : fph2);
-	  }
+	  tors_ecalc(&e2,&fph2,dph2,ktor1_2[j],ktor3_2[j]);
+	  log_sum_merge(e1=et,e2,&et,fph1=fph,fph2,&fph,bet);
 	}
 	
 	e += et;
@@ -659,21 +649,12 @@ double torsion(int iflag) {
 
 	for (d = -pi; d < pi; d += pi/360) {
 	  dph = d - phn[j];
-	  
-	  if (FF_TORS == 1) {
-	    tors_ecalc(&et,&fph,dph,ktor1[j],ktor3[j]);
-	    e1 = et; fph1 = fph;
-	  }
+	  tors_ecalc(&et,&fph,dph,ktor1[j],ktor3[j]);
 	  
 	  if (FF_TORS == 2) {
 	    dph2 = d - phn2[j];
-	    if (tor[j]) tors_ecalc(&e1,&fph1,dph,ktor1[j],ktor3[j]);
-	    if (tor2[j]) tors_ecalc(&e2,&fph2,dph2,ktor1_2[j],ktor3_2[j]);
-	    if (tor[j] && tor2[j]) log_sum_merge(e1,e2,&et,fph1,fph2,&fph,bet);
-	    else {
-	      et = (tor[j] ? e1 : e2);
-	      fph = (tor[j] ? fph1 : fph2);
-	    }
+	    tors_ecalc(&e2,&fph2,dph2,ktor1_2[j],ktor3_2[j]);
+	    log_sum_merge(e1=et,e2,&et,fph1=fph,fph2,&fph,bet);
 	  }
 	  
 	  fprintf(fp,"%i %lf %lf %lf %lf %lf %lf %lf \n",j,d*180/pi,e1,e2,et,

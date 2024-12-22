@@ -58,8 +58,7 @@ extern double xnat4[],ynat4[],znat4[];
 extern double xnat5[],ynat5[],znat5[];
 extern double bn[],thn[],phn[];       
 extern double bn2[],thn2[],phn2[];
-extern int nat[],nat2[];
-extern int tor[],tor2[];
+extern int dis[],dis2[];
 extern int npair,npair2,npair3,npair4,npair5;
 extern int ndpair;
 extern int qpair;                   
@@ -77,7 +76,6 @@ extern int nni2[],nnj2[];
 extern int nni3[],nnj3[];
 extern int nni4[],nnj4[];
 extern int dual1[],dual2[];
-extern int nat1[],nat2[],nat3[],nat4[],nat5[];
 extern int link[];
 extern double kcon_nat1[];     
 extern double kcon_nat2[];       
@@ -156,11 +154,10 @@ void get_nndist(double *distg1,double *distg2,
 		int *nni1,int *nnj1,int *nni2,int *nnj2,
 		double *xn,double *yn,double *zn);
 void write_natdist(char *fn,double *dist,int n,int *ip1,int *ip2);
-void set_bonded_strength(double *kbond,double *kbend,double *ktor1,double *ktor3,
-			 int *nat);
+void set_bonded_strength(double *kbond,double *kbend,double *ktor1,double *ktor3);
 void get_bonded_param(double *bn,double *thn,double *phn,
-		      double *xnat,double *ynat,double *znat,
-		      int *nat,int *tor,char *fn);
+		      double *xnat,double *ynat,double *znat);
+void print_bonded_param(double *bn,double *thn,double *phn,char *fn);
 int relax_chains(int ich);
 int relax_crowders(void);
 void init(int iflag);
@@ -218,7 +215,7 @@ void cr2box(int icr);
 void dof2cart(int iflag);
 int cart2dof(void);
 /* utils.c */
-int read_native(char *fn,double *xr,double *yr,double *zr,int *nat);
+int read_native(char *fn,double *xr,double *yr,double *zr);
 int read_contacts(char *fn,int *ip1,int *ip2);
 void dumppdb(char *fn,double *o,int nobs);
 double rmsd_calc(double *x1,double *y1,double *z1,

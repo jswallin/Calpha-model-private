@@ -24,7 +24,7 @@
 # define FF_EXVOL 1                /* exvol()-- 1 on, 0 off                 */
 # define FF_DISULF 2              /* disulfide bonds-- 1 on, 2 dual, 0 off */
 # define FF_SEQ 0                  /* hp()   -- 1 on, 0 off                 */
-# define FF_MULTIBODY 2            /* cont() -- multibody effects           */ 
+# define FF_MULTIBODY 1            /* cont() -- multibody effects           */ 
 /************* measurements *************************************************/
 # define NBIN 200                  /* # bins                                */
 # define NOBS 19                   /* # observables                         */
@@ -35,14 +35,14 @@
 # define SNAP2 5000                /* for interval SNAP1 < imd < SNAP2      */
 # define RMSD 2                    /* 1 NATIVE, 2 NATIVE2, 0 off            */
 /************* files input **************************************************/
-# define NATIVE "native_2jp1_dimer_8-54_full"
+# define NATIVE "native_2jp1_dimer_8-54_full_chainswap"
 # define NATIVE2 "native_1j8i_10-69_full"
-# define CONTMAP "smog_2jp1_dimer_8-54_del14-18"
+# define CONTMAP "smog_2jp1_dimer_8-54_symmetrized"
 # define CONTMAP2 "smog_1j8i_10-69_mirror"
 # define CONTMAP3 ""
 # define CONTMAP4 ""
 # define DISULFIDE "disulfide"
-# define START "native_2jp1_dimer_8-54_full" //"native_1j8i_10-69_full"
+# define START "native_2jp1_dimer_8-54_full_chainswap" //"native_1j8i_10-69_full"
 # define INPUT "input"
 # define INPUTG "inputg"
 # define CONTPAR ""// "./cont_param_2KDL_smog"

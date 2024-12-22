@@ -13,20 +13,25 @@ double xcro[NCR], ycro[NCR], zcro[NCR];  /* Back up for crowders coordinates*/
 /****************************************************************************/
 /***** input/output *********************************************************/
 /****************************************************************************/
-int read_native(char *fn,double *xr,double *yr,double *zr,int *nat) {
+int read_native(char *fn,double *xr,double *yr,double *zr) {
   int j, n = 0;
   double tmpx,tmpy,tmpz;
   FILE *fp1;
 
-  if ( NULL == (fp1 = fopen(fn,"r")) ) return 0;
+  if ( NULL == (fp1 = fopen(fn,"r")) )
+    return 0;
 
   while (4 == fscanf(fp1,"%i %lf %lf %lf",&j,&tmpx,&tmpy,&tmpz)) {
+
     if (j < 0 || j > N-1) {
       fprintf(fp_log,"<read_native> (%s) Ignoring j = %i \n",fn,j);
       continue;
     }
-    xr[j] = tmpx; yr[j] = tmpy; zr[j] = tmpz;
-    nat[j] = 1;
+
+    xr[j] = tmpx;
+    yr[j] = tmpy;
+    zr[j] = tmpz;
+
     ++n;
   }    
 
