@@ -2,7 +2,7 @@
 # define NTMP 16                    /* # temperatures                        */
 # define TMAX 0.98                 /* max temperature                       */
 # define TMIN 0.76                 /* min temperature                       */
-# define BOX 100                   /* simulation box                        */
+# define BOX 150                   /* simulation box                        */
 # define ISTART 0                  /* 0 native, 1 read, 2 random            */
 # define ISEED 1                   /* 1 randomize seed (/dev/urandom)       */
 /************* MD parameters ************************************************/
@@ -24,7 +24,7 @@
 # define FF_EXVOL 1                /* exvol()-- 1 on, 0 off                 */
 # define FF_DISULF 2               /* disulfide bonds -- 1 on, 2 dual, 0 off*/
 # define FF_MULTIBODY 1            /* multibody effects -- 1 on, 0 off      */
-# define FF_SALT 0                 /* screening effect (csalt) -- 1 on 0 off*/
+# define FF_SALT 1                 /* screening effect (csalt) -- 1 on 0 off*/
 /************* measurements *************************************************/
 # define NBIN 200                  /* # bins                                */
 # define NOBS 28                   /* # observables                         */
@@ -40,7 +40,7 @@
 # define CONTMAP2 "smog_2jp1_r8-52_sym"
 # define DISULFIDE "disulfide"
 # define START "native_2jp1_fullchain"  
-# define INPUT "input"
+# define INPUT "input_anc4"
 # define INPUTG "inputg"
 # define CONTPAR "" //"./cont_param_1j8i_1.14"
 # define CONTPAR2 "./cont_param_2jp1_0.89"

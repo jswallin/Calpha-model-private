@@ -47,19 +47,19 @@ int main (int argc,char *argv[])
       /* Energies (o[] index = column number in output files) */
 
       o[3]=Ekin; o[4]=Epot; o[5]=Ebon; o[6]=Eben; o[7]=Erep; o[8]=Etor;
-      o[9]=Econ1; o[10]=Econ2; o[11]=Ecorr;  o[12]=Ecc; o[13]=Ecb;
+      o[9]=Econ1; o[10]=Econ2; o[11]=Ecorr; o[12]=Ecc; o[13]=Ecb;
 
       /* Custom */
 
       /* two chains */
-
+      
       rg1 = sqrt( gyr2(iBeg[0],iEnd[0]) );
       rg2 = sqrt( gyr2(iBeg[1],iEnd[1]) );
       rmsd1 = rmsd_calc(xnat,ynat,znat,x,y,z,9,68);
       rmsd2 = rmsd_calc(xnat2,ynat2,znat2,x,y,z,7,53);
       rmsd3 = rmsd_calc(xnat,ynat,znat,x,y,z,102,161);
       rmsd4 = rmsd_calc(xnat2,ynat2,znat2,x,y,z,100,146);
-
+      
       o[14] = rg1;
       o[15] = rg2;
       o[16] = rmsd1;
@@ -74,8 +74,9 @@ int main (int argc,char *argv[])
       o[25] = (ncont_map1(0) >= qcut_a ? 1 : 0);
       o[26] = (ncont_map1(1) >= qcut_a ? 1 : 0);
       o[27] = (ncont_map2(-1) >= qcut_b ? 1 : 0);
+
       //      o[25] = sqrt(dist2(id1[0],id2[0]));
-      //      o[26] = sqrt(dist2(id1[1],id2[1]));
+      //      o[26] = sqrt(dist2(id1[1],id2[1])); 
 
 
       if ((imd+1) > NTHERM) {
@@ -103,7 +104,7 @@ int main (int argc,char *argv[])
       averages(so);
       histo_bond(1);
       histo_bend(1);
-      histo_tors(1,0);
+      histo_tors(1,N/2);
       histoe(1,0);
       histo_cont1(1,0,0);
       histo_cont2(1,0,0);
