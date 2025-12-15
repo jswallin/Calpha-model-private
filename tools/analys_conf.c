@@ -20,12 +20,12 @@ int main (int argc,char *argv[])
   int a1,a2,nruns;
   double o[NOBS],so[NTMP][NOBS];
   double po2[NTMP][NOBS],po[NRUN][NTMP][NOBS];
-  double nn1=0,nn2=0,rg1,rg2,rmsd1,rmsd2,rmsd3,rmsd4;
+  double nn1=0,nn2=0,rg1,rg2,rmsd1,rmsd2,rmsd3,rmsd4,dcm;
   long int imd,imd0;
   char fname[100];
   FILE *fp;
   
-  double qcut_a = 95;  // monomer state cutoff
+  double qcut_a = 90;  // monomer state cutoff
   double qcut_b = 180; // dimer state cutoff
 
   if (argc != 4){
@@ -61,8 +61,10 @@ int main (int argc,char *argv[])
 
   printf("<analys_conf> qcut_a %lf qcut_b %lf \n",qcut_a,qcut_b);
 
-  imd0 = 1;
-
+  histoqd(-1,0,0,0);
+  histoqq(-1,0,0,0);
+  
+  imd0 = 0;
   for (run = 0; run < nruns; run++) {
     sprintf(fname,argv[1],run + a1);
 
@@ -86,6 +88,7 @@ int main (int argc,char *argv[])
       rmsd2 = rmsd_calc(xnat2,ynat2,znat2,x,y,z,7,53);
       rmsd3 = rmsd_calc(xnat,ynat,znat,x,y,z,102,161);
       rmsd4 = rmsd_calc(xnat2,ynat2,znat2,x,y,z,100,146);
+      dcm = cmdist(0,1);
       
       o[14] = rg1;
       o[15] = rg2;
@@ -101,22 +104,7 @@ int main (int argc,char *argv[])
       o[25] = (ncont_map1(0) >= qcut_a ? 1 : 0);
       o[26] = (ncont_map1(1) >= qcut_a ? 1 : 0);
       o[27] = (ncont_map2(-1) >= qcut_b ? 1 : 0);
-
-      /* single chain */
-      
-      /*
-      rmsd1 = rmsd_calc(xnat,ynat,znat,x,y,z,0,N-1);
-      rmsd2 = rmsd_calc(xnat2,ynat2,znat2,x,y,z,0,N-1);
-      
-      o[1]=Ekin; o[2]=Epot; o[3]=Ebon; o[4]=Eben; o[5]=Erep; o[6]=Etor;
-      o[7]=Econ1; o[8]=Econ2; o[9]=Ecorr;  o[10]=Ecc; o[11]=Ecb;
-
-      o[12] = rmsd1; 
-      o[13] = rmsd2;
-      o[14] = (nn1 = no_cont()) / max(npair,1);  
-      o[15] = (nn2 = no_cont2()) / max(npair2,1);
-      o[16] = (nn1 > qcut_a ? 1 : 0);
-      o[17] = (nn2 > qcut_b ? 1 : 0); */
+      o[28] = dcm;
 
       //      printf("imd %li %lf\n",imd,Epot);
 
@@ -130,9 +118,12 @@ int main (int argc,char *argv[])
 	histoe(0,Epot);
 	histo_cont1(0,ind,nn1);
 	histo_cont2(0,ind,nn2);
+
+	histoqd(0,ind,o[20],o[28]);
+	histoqq(0,ind,o[20],o[21]);
       }
       
-      //      runtime(imd-1,o);
+      runtime(imd0,o);
     }
 
   }
@@ -166,15 +157,6 @@ int main (int argc,char *argv[])
   strcpy(str,OUTDIR);
   strcat(str,AVERAGES);
 
-  /*  fp = fopen(str,"w");
-  for (i = 0; i < NTMP; i++) {
-    fprintf(fp,"%i %lf ",i,1./beta[i]);
-    for (j = 1; j < NOBS; j++)
-      fprintf(fp,"%.5f ",so[i][j]);
-    fprintf(fp,"\n");
-  }
-  fclose(fp); */
-
   for (k = 3; k < NOBS; k++) {
     sprintf(str,"%s%s_%d",OUTDIR,AVERAGES,k);
 
@@ -194,6 +176,9 @@ int main (int argc,char *argv[])
   histo_cont1(2,0,0);
   histo_cont2(2,0,0);
 
+  histoqd(1,0,0,0);
+  histoqq(1,0,0,0);
+  
   return 0;
 }
 /****************************************************************************/

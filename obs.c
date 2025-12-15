@@ -166,6 +166,20 @@ void center_of_mass2(int ich,double *xcm,double *ycm, double *zcm) {
   return ;
 }
 /****************************************************************************/
+double cmdist(int c1, int c2) {
+  double xcm1,ycm1,zcm1;
+  double xcm2,ycm2,zcm2;
+
+  center_of_mass2(c1,&xcm1,&ycm1,&zcm1);
+  center_of_mass2(c2,&xcm2,&ycm2,&zcm2);
+
+  xcm2 -= xcm1; bc(&xcm2);
+  ycm2 -= ycm1; bc(&ycm2);
+  zcm2 -= zcm1; bc(&zcm2);
+
+  return sqrt(xcm2 * xcm2 + ycm2 * ycm2 + zcm2 * zcm2);
+}
+/****************************************************************************/
 void histo_bond(int iflag) {
   static double low = 2.5,high = 4.5;
   static double his[N][NBIN],eps;
@@ -405,40 +419,114 @@ void histormsd(int iflag,double x) {
   }
 }
 /****************************************************************************/
-void histoq1(int iflag, int x) {
-  static int nc,his[MAXP];
-  int j;
-
+void histoqd(int iflag,int ind,int n,double d) {
+  static double *his = NULL, *sum = NULL;
+  static double low = 0, high = 200, eps;
+  double hval;
+  size_t i,j,k;
   char str[100];
   FILE *fp;
 
-  if (iflag<0) {
-    for (j=0;j<MAXP;j++) his[j]=0;
-    nc=npair;
-    if (nc>MAXP) {printf("histoq1: nc too big\n");exit(-1);}
-
+  if (iflag < 0) {
+    if (his == NULL) {
+      his = malloc( NTMP*MAXP*NBIN * sizeof(*his) );
+      sum = malloc( NTMP * sizeof(*sum) );
+    }
+    for (i = 0; i < NTMP*MAXP*NBIN; i++) his[i] = 0;
+    for (i = 0; i < NTMP; i++) sum[i] = 0;
+    eps = (high - low) / NBIN;
     strcpy(str,OUTDIR);
-    strcat(str,"_hisq1");
+    strcat(str,"_hisqd");
     fp = fopen(str,"w");
     fclose(fp);
-
     return;
   }
   
-  if (iflag==0) {
-    if (x >= 0 && x <= nc)
-      his[x]++;
+  if (iflag == 0) {
+    if (n >= 0 && n < MAXP && d >= low && d < high) {
+      his[ind*MAXP*NBIN + n*NBIN + (int) ((d - low) / eps) ]++;
+      sum[ind]++;
+    }
     return;
   }
 
-  if (iflag>0) {
+  if (iflag > 0) {
     strcpy(str,OUTDIR);
-    strcat(str,"_hisq1");
+    strcat(str,"_hisqd");
+
     fp = fopen(str,"w");
-    for (j = 0;j <= nc; j++) fprintf(fp,"%i %i\n",j,his[j]);
+    for (i = 0; i < NTMP; i++) {
+      for (j = 0; j < MAXP; j++) {
+	for (k = 0; k < NBIN; k++) {
+	  hval = his[i*MAXP*NBIN + j*NBIN + k];
+	  d = low + (k + 0.5) * eps;
+	  fprintf(fp,"%zu %zu %lf %le %le\n",i, j, d, hval, hval / sum[i]);
+	}
+      }
+    }
+    fclose(fp);
+
+    if (iflag > 1) {
+      free(his);
+      free(sum);
+    }
+    
+    return;
+  }
+}
+/****************************************************************************/
+void histoqq(int iflag,int ind,int n,int m) {
+  static double *his = NULL, *sum = NULL;
+  double hval;
+  size_t i,j,k;
+  char str[100];
+  FILE *fp;
+
+  if (iflag < 0) {
+    if (his == NULL) {
+      his = malloc( NTMP*MAXP*MAXP * sizeof(*his) );
+      sum = malloc( NTMP * sizeof(*sum) );
+    }
+    for (i = 0; i < NTMP*MAXP*MAXP; i++) his[i] = 0;
+    for (i = 0; i < NTMP; i++) sum[i] = 0;
+    strcpy(str,OUTDIR);
+    strcat(str,"_hisqq");
+    fp = fopen(str,"w");
     fclose(fp);
     return;
   }
+  
+  if (iflag == 0) {
+    if (n >= 0 && n < MAXP && m >= 0 && m < MAXP) {
+      his[ind*MAXP*MAXP + n*MAXP + m]++;
+      sum[ind]++;
+    }
+    return;
+  }
+
+  if (iflag > 0) {
+    strcpy(str,OUTDIR);
+    strcat(str,"_hisqq");
+
+    fp = fopen(str,"w");
+    for (i = 0; i < NTMP; i++) {
+      for (j = 0; j < MAXP; j++) {
+	for (k = 0; k < MAXP; k++) {
+	  hval = his[i*MAXP*MAXP + j*MAXP + k];
+	  fprintf(fp,"%zu %zu %zu %le %le\n",i, j, k, hval, hval / sum[i]);
+	}
+      }
+    }
+    fclose(fp);
+
+    if (iflag > 1) {
+      free(his);
+      free(sum);
+    }
+    
+    return;
+  }
+
 }
 /****************************************************************************/
 void historg(int iflag,double x) {

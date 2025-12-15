@@ -7,7 +7,7 @@
 # define ISEED 1                   /* 1 randomize seed (/dev/urandom)       */
 /************* MD parameters ************************************************/
 # define MDSTEP (10000000000)      /* max # md steps                        */
-# define NTHERM (10000)           /* # discarded steps                     */
+# define NTHERM (3000000000)           /* # discarded steps                     */
 # define IFLIP (100)               /* temperature flips                     */
 # define ISAMP (100)               /* sample                                */
 # define ICHECK (100000)           /* checkpoint                            */
@@ -27,9 +27,9 @@
 # define FF_SALT 1                 /* screening effect (csalt) -- 1 on 0 off*/
 /************* measurements *************************************************/
 # define NBIN 200                  /* # bins                                */
-# define NOBS 28                   /* # observables                         */
+# define NOBS 29                   /* # observables                         */
 # define MAXCELL 100000            /* max # cells                           */
-# define MAXP 500                  /* max # contact pairs                   */
+# define MAXP 300                  /* max # contact pairs                   */
 # define SNAP1 5000                /* write snapshots to directory SNAPDIR  */
 # define SNAP2 5000                /* for interval SNAP1 < imd < SNAP2      */
 # define RMSD 2                    /* 1 NATIVE, 2 NATIVE2, 0 off            */
@@ -40,9 +40,9 @@
 # define CONTMAP2 "smog_2jp1_r8-52_sym"
 # define DISULFIDE "disulfide"
 # define START "native_2jp1_fullchain"  
-# define INPUT "input_anc4"
+# define INPUT "input" //"input_anc4"
 # define INPUTG "inputg"
-# define CONTPAR "" //"./cont_param_1j8i_1.14"
+# define CONTPAR "" 
 # define CONTPAR2 "./cont_param_2jp1_0.89"
 # define DISREG "./dis_regions_1j8i"
 # define DISREG2 "./dis_regions_2jp1"

@@ -32,7 +32,7 @@ void printinfo(void) {
   printf("\n");
   printf("Simulation parameters: \n");
   printf("  N %i NCH %i NCR %i \n",N,NCH,NCR);
-  printf("  MDSTEP %li NTHERM %i\n",(long)MDSTEP,NTHERM);
+  printf("  MDSTEP %li NTHERM %li\n",(long)MDSTEP,NTHERM);
   printf("  IRT %i ICONF %i ISTART %i\n",IRT,ICONF,ISTART);
   printf("  NTMP %i TMIN %lf TMAX %lf \n",NTMP, TMIN, TMAX);
   printf("  BOX %i \n",BOX);
@@ -71,21 +71,20 @@ void ramachan(char *fn,double b,double th,double ph) {
 }
 /****************************************************************************/
 void runtime(long it,double o[]) {
+  static char fname[100];
+  static FILE *fp = NULL;
   int i;
-  FILE *fp;
-  char str[100];
   
-  strcpy(str,OUTDIR);
-  strcat(str,RT);
-
-  fp = fopen(str,"a");
-
+  if (strlen(fname) == 0) {
+    strcpy(fname,OUTDIR);
+    strcat(fname,RT);
+    fp = fopen(fname,"a");
+  }
+  
   fprintf(fp,"%li %i ",it,ind);
   for (i = 3; i < NOBS; i++)
     fprintf(fp,"%.4lf ",o[i]);
   fprintf(fp,"\n");
-
- fclose(fp);
 } 
 /****************************************************************************/
 void averages(double so[][NOBS]) {
@@ -616,8 +615,11 @@ int read_contacts(char *fn,int *ip1,int *ip2) {
     if (ip1[n] < 0 || ip1[n] > N-1 || ip2[n] < 0 || ip2[n] > N-1) 
       fprintf(fp_log,"<read_contacts> (%s) Ignoring %3d, %3d\n",
 	      fn,ip1[n],ip2[n]);
-    else 
+    else {
+      fprintf(fp_log,"<read_contacts> (%s) %3d %c %3d %c\n",
+	      fn,ip1[n],seq[ip1[n]],ip2[n],seq[ip2[n]]);
       n++;
+    }
   }
   
   fclose(fp1);
@@ -1051,7 +1053,7 @@ void init(int iflag) {
   if (npair  > MAXP) {printf("npair too big\n"); exit(-1);}
   if (npair2 > MAXP) {printf("npair2 too big\n"); exit(-1);}
   if (ndpair > MAXP) {printf("ndpair too big\n"); exit(-1);}
-
+  
   /* NON-BONDED INTERACTIONS */
 
   if (FF_CONT > 0) {
